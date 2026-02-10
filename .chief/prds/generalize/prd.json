@@ -13,8 +13,8 @@
         "Error message for unsupported formats is updated to mention .jsonl"
       ],
       "priority": 1,
-      "passes": false,
-      "inProgress": true
+      "passes": true,
+      "inProgress": false
     },
     {
       "id": "US-002",
