@@ -2,12 +2,18 @@
 
 import argparse
 import asyncio
-import sys
+
+from rich.console import Console
+from rich.progress import Progress, BarColumn, TextColumn, MofNCompleteColumn, TimeRemainingColumn
+from rich.table import Table
+from rich.text import Text
 
 from domain_search.tld_list import fetch_tld_list
 from domain_search.dns_checker import DomainStatus, DomainResult, check_domains
 from domain_search.hack_generator import generate_domain_hacks, DomainHack
 from domain_search.rdap_checker import verify_available_domains
+
+console = Console()
 
 
 def generate_domains(term: str, tlds: list[str]) -> list[str]:
@@ -25,16 +31,26 @@ def sort_results(results: list[DomainResult]) -> list[DomainResult]:
     return sorted(results, key=lambda r: (status_order[r.status], r.domain))
 
 
+STATUS_STYLES = {
+    DomainStatus.AVAILABLE: "bold green",
+    DomainStatus.UNKNOWN: "yellow",
+    DomainStatus.REGISTERED: "red",
+}
+
+
 def display_results(
     results: list[DomainResult],
     domain_meta: dict[str, dict] | None = None,
+    output_console: Console | None = None,
 ) -> None:
-    """Display results to the terminal.
+    """Display results to the terminal using rich.
 
     Args:
         results: List of DomainResult objects.
         domain_meta: Optional dict mapping domain -> {"type": "exact"|"hack", "visual": str}.
+        output_console: Optional Console for output (used in testing).
     """
+    out = output_console or console
     sorted_results = sort_results(results)
     meta = domain_meta or {}
 
@@ -44,22 +60,38 @@ def display_results(
 
     has_hacks = any(m.get("type") == "hack" for m in meta.values())
 
+    table = Table(title="Domain Search Results", show_lines=False)
+    table.add_column("Domain", style="bold")
+    table.add_column("Status")
     if has_hacks:
-        print(f"\n{'Domain':<30} {'Status':<20} {'Type':<8} {'Visual Reading'}")
-        print("-" * 80)
-        for r in sorted_results:
-            m = meta.get(r.domain, {})
+        table.add_column("Type")
+        table.add_column("Visual Reading")
+
+    for r in sorted_results:
+        style = STATUS_STYLES.get(r.status, "")
+        status_text = Text(r.status.value, style=style)
+        domain_style = "bold green" if r.status == DomainStatus.AVAILABLE else ""
+        domain_text = Text(r.domain, style=domain_style)
+
+        m = meta.get(r.domain, {})
+        if has_hacks:
             dtype = m.get("type", "exact")
             visual = m.get("visual", "")
-            print(f"{r.domain:<30} {r.status.value:<20} {dtype:<8} {visual}")
-    else:
-        print(f"\n{'Domain':<40} {'Status'}")
-        print("-" * 60)
-        for r in sorted_results:
-            print(f"{r.domain:<40} {r.status.value}")
+            table.add_row(domain_text, status_text, dtype, visual)
+        else:
+            table.add_row(domain_text, status_text)
 
-    print("-" * (80 if has_hacks else 60))
-    print(f"Total: {len(results)} | Available: {available} | Registered: {registered} | Unknown: {unknown}")
+    out.print(table)
+
+    summary = Text()
+    summary.append(f"Total: {len(results)}", style="bold")
+    summary.append(" | ")
+    summary.append(f"Available: {available}", style="bold green")
+    summary.append(" | ")
+    summary.append(f"Registered: {registered}", style="red")
+    summary.append(" | ")
+    summary.append(f"Unknown: {unknown}", style="yellow")
+    out.print(summary)
 
 
 def main() -> None:
@@ -111,52 +143,48 @@ def main() -> None:
                 domain_meta[h.domain] = {"type": "hack", "visual": h.visual}
 
     if not all_domains:
-        print("No domains to check.")
+        console.print("No domains to check.")
         return
 
     total = len(all_domains)
-    checked = 0
+    console.print(f"Loaded {len(tlds):,} TLDs")
 
-    def on_result(result: DomainResult) -> None:
-        nonlocal checked
-        checked += 1
-        sys.stdout.write(f"\rChecking {total:,} domains... [{checked:,}/{total:,}]")
-        sys.stdout.flush()
+    # DNS checking with rich progress bar
+    with Progress(
+        TextColumn("[bold blue]Checking domains"),
+        BarColumn(),
+        MofNCompleteColumn(),
+        TimeRemainingColumn(),
+        console=console,
+    ) as progress:
+        task = progress.add_task("dns", total=total)
 
-    print(f"Loaded {len(tlds):,} TLDs")
-    print(f"Checking {total:,} domains...")
+        def on_result(result: DomainResult) -> None:
+            progress.advance(task)
 
-    results = asyncio.run(
-        check_domains(all_domains, concurrency=args.concurrency, on_result=on_result)
-    )
-
-    # Clear the progress line
-    sys.stdout.write("\r" + " " * 60 + "\r")
-    sys.stdout.flush()
+        results = asyncio.run(
+            check_domains(all_domains, concurrency=args.concurrency, on_result=on_result)
+        )
 
     # RDAP verification of "possibly available" domains
     if not args.skip_rdap:
         available_count = sum(1 for r in results if r.status == DomainStatus.AVAILABLE)
         if available_count > 0:
-            rdap_checked = 0
+            with Progress(
+                TextColumn("[bold blue]Verifying via RDAP"),
+                BarColumn(),
+                MofNCompleteColumn(),
+                TimeRemainingColumn(),
+                console=console,
+            ) as progress:
+                rdap_task = progress.add_task("rdap", total=available_count)
 
-            def on_rdap_result(rdap_result) -> None:
-                nonlocal rdap_checked
-                rdap_checked += 1
-                sys.stdout.write(
-                    f"\rVerifying {available_count:,} available domains via RDAP... "
-                    f"[{rdap_checked:,}/{available_count:,}]"
+                def on_rdap_result(rdap_result) -> None:
+                    progress.advance(rdap_task)
+
+                results = asyncio.run(
+                    verify_available_domains(results, on_result=on_rdap_result)
                 )
-                sys.stdout.flush()
-
-            print(f"Verifying {available_count:,} available domains via RDAP...")
-            results = asyncio.run(
-                verify_available_domains(results, on_result=on_rdap_result)
-            )
-
-            # Clear the RDAP progress line
-            sys.stdout.write("\r" + " " * 80 + "\r")
-            sys.stdout.flush()
 
     display_results(results, domain_meta)
 

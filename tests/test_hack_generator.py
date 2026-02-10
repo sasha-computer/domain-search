@@ -1,8 +1,10 @@
 """Tests for US-004: Domain Hack Generator."""
 
+import io
 from unittest.mock import patch, AsyncMock, MagicMock
 
 import pytest
+from rich.console import Console
 
 from domain_search.hack_generator import (
     DomainHack,
@@ -12,6 +14,12 @@ from domain_search.hack_generator import (
 )
 from domain_search.dns_checker import DomainResult, DomainStatus
 from main import main, display_results
+
+
+def _capture_console() -> tuple[Console, io.StringIO]:
+    """Create a Console that writes to a StringIO for test capturing."""
+    buf = io.StringIO()
+    return Console(file=buf, force_terminal=True, width=120), buf
 
 
 # --- find_suffix_hacks ---
@@ -126,7 +134,7 @@ def test_generate_domain_hacks_no_matches():
 
 # --- CLI integration (--hack flag) ---
 
-def test_main_hack_flag(capsys):
+def test_main_hack_flag():
     """main() should accept --hack flag and find domain hacks."""
     mock_results = [
         DomainResult("kosti.ck", DomainStatus.AVAILABLE),
@@ -141,21 +149,24 @@ def test_main_hack_flag(capsys):
     async def mock_verify(dns_results, rate_limit=10, on_result=None):
         return dns_results
 
+    test_console, buf = _capture_console()
+
     with (
         patch("main.fetch_tld_list", return_value=["ck", "com"]),
         patch("main.check_domains", side_effect=mock_check_domains),
         patch("main.verify_available_domains", side_effect=mock_verify),
+        patch("main.console", test_console),
         patch("sys.argv", ["main.py", "--hack", "kostick"]),
     ):
         main()
 
-    output = capsys.readouterr().out
+    output = buf.getvalue()
     assert "kosti.ck" in output
     assert "kostick" in output  # visual reading
     assert "hack" in output  # type column
 
 
-def test_main_combined_term_and_hack(capsys):
+def test_main_combined_term_and_hack():
     """main() should support both positional term and --hack together."""
     mock_results = [
         DomainResult("sasha.com", DomainStatus.REGISTERED),
@@ -171,20 +182,23 @@ def test_main_combined_term_and_hack(capsys):
     async def mock_verify(dns_results, rate_limit=10, on_result=None):
         return dns_results
 
+    test_console, buf = _capture_console()
+
     with (
         patch("main.fetch_tld_list", return_value=["com", "sh"]),
         patch("main.check_domains", side_effect=mock_check_domains),
         patch("main.verify_available_domains", side_effect=mock_verify),
+        patch("main.console", test_console),
         patch("sys.argv", ["main.py", "sasha", "--hack", "sasha"]),
     ):
         main()
 
-    output = capsys.readouterr().out
+    output = buf.getvalue()
     assert "sasha.com" in output
     assert "sa.sh" in output
 
 
-def test_main_requires_term_or_hack(capsys):
+def test_main_requires_term_or_hack():
     """main() should error if neither term nor --hack is provided."""
     with (
         patch("sys.argv", ["main.py"]),
@@ -193,8 +207,9 @@ def test_main_requires_term_or_hack(capsys):
         main()
 
 
-def test_display_results_with_hack_metadata(capsys):
+def test_display_results_with_hack_metadata():
     """display_results should show Type and Visual Reading columns when hacks are present."""
+    test_console, buf = _capture_console()
     results = [
         DomainResult("kosti.ck", DomainStatus.AVAILABLE),
         DomainResult("sasha.com", DomainStatus.REGISTERED),
@@ -203,8 +218,8 @@ def test_display_results_with_hack_metadata(capsys):
         "kosti.ck": {"type": "hack", "visual": "kostick"},
         "sasha.com": {"type": "exact", "visual": ""},
     }
-    display_results(results, meta)
-    output = capsys.readouterr().out
+    display_results(results, meta, output_console=test_console)
+    output = buf.getvalue()
     assert "Type" in output
     assert "Visual Reading" in output
     assert "hack" in output
@@ -212,12 +227,13 @@ def test_display_results_with_hack_metadata(capsys):
     assert "kostick" in output
 
 
-def test_display_results_without_hack_metadata(capsys):
+def test_display_results_without_hack_metadata():
     """display_results without hacks should show simple format (no Type/Visual columns)."""
+    test_console, buf = _capture_console()
     results = [
         DomainResult("sasha.com", DomainStatus.REGISTERED),
     ]
-    display_results(results)
-    output = capsys.readouterr().out
+    display_results(results, output_console=test_console)
+    output = buf.getvalue()
     assert "Type" not in output
     assert "Visual Reading" not in output

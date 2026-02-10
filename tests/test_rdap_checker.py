@@ -1,11 +1,13 @@
 """Tests for US-005: RDAP availability verification."""
 
 import asyncio
+import io
 import json
 from unittest.mock import patch, AsyncMock, MagicMock
 
 import httpx
 import pytest
+from rich.console import Console
 
 from domain_search.dns_checker import DomainResult, DomainStatus
 from domain_search.rdap_checker import (
@@ -418,7 +420,13 @@ async def test_verify_preserves_non_available_domains():
 
 # --- CLI integration (--skip-rdap flag) ---
 
-def test_main_skip_rdap_flag(capsys):
+def _capture_console() -> tuple[Console, io.StringIO]:
+    """Create a Console that writes to a StringIO for test capturing."""
+    buf = io.StringIO()
+    return Console(file=buf, force_terminal=True, width=120), buf
+
+
+def test_main_skip_rdap_flag():
     """main() should skip RDAP when --skip-rdap is provided."""
     from main import main
 
@@ -432,20 +440,23 @@ def test_main_skip_rdap_flag(capsys):
                 on_result(r)
         return mock_results
 
+    test_console, buf = _capture_console()
+
     with (
         patch("main.fetch_tld_list", return_value=["com"]),
         patch("main.check_domains", side_effect=mock_check_domains),
         patch("main.verify_available_domains") as mock_verify,
+        patch("main.console", test_console),
         patch("sys.argv", ["main.py", "test", "--skip-rdap"]),
     ):
         main()
         mock_verify.assert_not_called()
 
-    output = capsys.readouterr().out
+    output = buf.getvalue()
     assert "test.com" in output
 
 
-def test_main_rdap_enabled_by_default(capsys):
+def test_main_rdap_enabled_by_default():
     """main() should run RDAP verification by default."""
     from main import main
 
@@ -463,15 +474,18 @@ def test_main_rdap_enabled_by_default(capsys):
         # Simulate RDAP confirming the domain as registered
         return [DomainResult("test.com", DomainStatus.REGISTERED)]
 
+    test_console, buf = _capture_console()
+
     with (
         patch("main.fetch_tld_list", return_value=["com"]),
         patch("main.check_domains", side_effect=mock_check_domains),
         patch("main.verify_available_domains", side_effect=mock_verify),
+        patch("main.console", test_console),
         patch("sys.argv", ["main.py", "test"]),
     ):
         main()
 
-    output = capsys.readouterr().out
+    output = buf.getvalue()
     assert "test.com" in output
     assert "Registered: 1" in output
     assert "Available: 0" in output

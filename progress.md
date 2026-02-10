@@ -20,6 +20,11 @@
 - RDAP rate limiting via `_RateLimiter` token-bucket (default 10/sec)
 - `--skip-rdap` flag bypasses RDAP verification for faster results
 - When adding new pipeline steps (like RDAP), existing CLI tests that call `main()` must mock the new step too
+- Rich library used for terminal output: `Console`, `Table`, `Text`, `Progress` from `rich`
+- `display_results` accepts `output_console` parameter for test injection; defaults to module-level `console`
+- CLI tests that call `main()` must patch `main.console` with a test Console writing to `io.StringIO`
+- `STATUS_STYLES` dict maps `DomainStatus` → rich style strings (green/red/yellow)
+- `_capture_console()` helper in tests creates `Console(file=buf, force_terminal=True, width=120)` for capturing rich output
 
 ---
 
@@ -102,4 +107,26 @@
   - When adding new pipeline steps to `main()`, all existing CLI tests calling `main()` need to mock the new function
   - `httpx.AsyncClient` context manager mocking requires both `__aenter__` and `__aexit__` AsyncMock
   - Token-bucket rate limiter pattern: track tokens + last refill time, refill based on elapsed time, sleep when empty
+---
+
+## 2026-02-10 - US-006
+- Replaced plain `print()` output with `rich` library for formatted terminal output
+- Added `rich` dependency (>=13.0.0) to `pyproject.toml`
+- `display_results()` now renders a `rich.Table` with "Domain Search Results" title
+- Color-coded statuses: green (bold) for available, red for registered, yellow for unknown
+- Available domains highlighted with bold green domain text for easy scanning
+- Rich `Progress` bar with `BarColumn`, `MofNCompleteColumn`, `TimeRemainingColumn` for both DNS and RDAP stages
+- `display_results` accepts optional `output_console` parameter for test output capturing
+- Summary line uses `rich.Text` with styled segments for counts
+- Updated all CLI integration tests across `test_search.py`, `test_hack_generator.py`, `test_rdap_checker.py` to patch `main.console`
+- Added new `tests/test_rich_output.py` with 12 tests covering table structure, color coding, summary, sorting, and progress bar
+- All 86 tests pass (12 new for US-006)
+- Files changed: `main.py`, `pyproject.toml`, `tests/test_search.py`, `tests/test_hack_generator.py`, `tests/test_rdap_checker.py`, `tests/test_rich_output.py`, `progress.md`, `prd.json`
+- **Learnings for future iterations:**
+  - Rich `Console` output is not captured by `capsys` — must inject a `Console(file=StringIO, force_terminal=True)` for test capture
+  - Use `force_terminal=True` in test Console to get ANSI codes and rich formatting in StringIO buffer
+  - Patching `main.console` is needed for CLI integration tests since `main()` uses module-level `console` and `Progress(console=console)`
+  - `display_results` DI pattern: `output_console` parameter for unit tests, `main.console` patching for integration tests
+  - Removed `sys` import from `main.py` since `sys.stdout.write` progress was replaced by rich `Progress`
+  - `STATUS_STYLES` dict centralizes color mapping, making it easy to test and modify
 ---

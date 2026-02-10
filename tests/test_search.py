@@ -1,14 +1,22 @@
 """Tests for US-003: Search term.{tld} across all TLDs."""
 
 import asyncio
+import io
 from unittest.mock import patch, MagicMock, AsyncMock
 
 import dns.asyncresolver
 import dns.resolver
 import pytest
+from rich.console import Console
 
 from domain_search.dns_checker import DomainResult, DomainStatus
 from main import generate_domains, sort_results, display_results
+
+
+def _capture_console() -> tuple[Console, io.StringIO]:
+    """Create a Console that writes to a StringIO for test capturing."""
+    buf = io.StringIO()
+    return Console(file=buf, force_terminal=True, width=120), buf
 
 
 def test_generate_domains_creates_all_combinations():
@@ -52,27 +60,29 @@ def test_sort_results_empty():
     assert sort_results([]) == []
 
 
-def test_display_results_outputs_summary(capsys):
+def test_display_results_outputs_summary():
+    test_console, buf = _capture_console()
     results = [
         DomainResult("sasha.com", DomainStatus.REGISTERED),
         DomainResult("sasha.xyz", DomainStatus.AVAILABLE),
         DomainResult("sasha.zzz", DomainStatus.UNKNOWN),
     ]
-    display_results(results)
-    output = capsys.readouterr().out
+    display_results(results, output_console=test_console)
+    output = buf.getvalue()
     assert "Total: 3" in output
     assert "Available: 1" in output
     assert "Registered: 1" in output
     assert "Unknown: 1" in output
 
 
-def test_display_results_sorted_order(capsys):
+def test_display_results_sorted_order():
+    test_console, buf = _capture_console()
     results = [
         DomainResult("b.com", DomainStatus.REGISTERED),
         DomainResult("a.xyz", DomainStatus.AVAILABLE),
     ]
-    display_results(results)
-    output = capsys.readouterr().out
+    display_results(results, output_console=test_console)
+    output = buf.getvalue()
     # Available should appear before registered in output
     available_pos = output.index("a.xyz")
     registered_pos = output.index("b.com")
@@ -101,11 +111,10 @@ async def test_on_result_callback_invoked():
         assert len(results) == 2
 
 
-def test_main_accepts_cli_argument(capsys):
+def test_main_accepts_cli_argument():
     """main() should accept a search term as CLI argument."""
     from main import main
 
-    # Mock both fetch_tld_list and check_domains to avoid real network calls
     mock_results = [
         DomainResult("test.com", DomainStatus.REGISTERED),
         DomainResult("test.xyz", DomainStatus.AVAILABLE),
@@ -120,15 +129,18 @@ def test_main_accepts_cli_argument(capsys):
     async def mock_verify(dns_results, rate_limit=10, on_result=None):
         return dns_results
 
+    test_console, buf = _capture_console()
+
     with (
         patch("main.fetch_tld_list", return_value=["com", "xyz"]),
         patch("main.check_domains", side_effect=mock_check_domains),
         patch("main.verify_available_domains", side_effect=mock_verify),
+        patch("main.console", test_console),
         patch("sys.argv", ["main.py", "test"]),
     ):
         main()
 
-    output = capsys.readouterr().out
+    output = buf.getvalue()
     assert "test.com" in output
     assert "test.xyz" in output
     assert "Available: 1" in output
