@@ -10,6 +10,11 @@
 - `check_domains` supports `on_result` callback for progress tracking
 - `generate_domains()` in `main.py` creates `{term}.{tld}` for all TLDs
 - `sort_results()` sorts by status (available > unknown > registered), then alphabetically
+- `domain_search/hack_generator.py` provides `generate_domain_hacks(word, tlds)` → list of `DomainHack(domain, visual)`
+- Domain hacks split into suffix hacks (TLD at end of word) and interior hacks (TLD anywhere else within word)
+- CLI `--hack WORD` flag can be combined with positional `term` for both exact + hack search
+- `domain_meta` dict in `main.py` maps domain → `{"type": "exact"|"hack", "visual": str}` for enriched display
+- `display_results` auto-detects hack mode and adds Type/Visual Reading columns when hacks are present
 
 ---
 
@@ -52,4 +57,23 @@
   - For CLI tests, mock both `fetch_tld_list` and `check_domains` at the `main` module level (not at `domain_search.*`)
   - `sys.stdout.write` with `\r` provides simple progress indicator without needing `rich` (US-006 will upgrade)
   - `argparse` positional arg for `term` means `--hack` flag can be added later (US-004) without breaking existing interface
+---
+
+## 2026-02-10 - US-004
+- Implemented domain hack generator in `domain_search/hack_generator.py`
+- `find_suffix_hacks(word, tlds)` finds TLDs matching end of word (e.g., "kostick" → `kosti.ck`)
+- `find_interior_hacks(word, tlds)` finds TLDs appearing within word, excluding suffix (e.g., "sasha" + "sh" → `sa.sh`)
+- `generate_domain_hacks(word, tlds)` combines both, deduplicates, and sorts by domain name
+- Updated CLI: `--hack WORD` flag activates domain hack mode; can combine with positional `term`
+- `term` arg changed to `nargs="?"` (optional) so `--hack` can be used standalone
+- Added `domain_meta` dict pattern in `main.py` for enriching display with type/visual info
+- `display_results` auto-switches to wide format (Type + Visual Reading columns) when hacks present
+- Files changed: `domain_search/hack_generator.py`, `main.py`, `tests/test_hack_generator.py`, `progress.md`, `prd.json`
+- **Learnings for future iterations:**
+  - Domain hack logic is pure string matching — no network calls, easy to test
+  - Suffix hacks: check `word.endswith(tld)` with guard that prefix is non-empty
+  - Interior hacks: use `str.find()` in a loop for multiple occurrences, exclude suffix position and position 0
+  - `domain_meta` dict enriches DNS results without modifying `DomainResult` dataclass — keeps dns_checker independent
+  - Changed `term` from required positional to `nargs="?"` optional, with custom validation `parser.error()` if neither term nor --hack provided
+  - The `DomainHack` dataclass carries both `domain` (e.g., "kosti.ck") and `visual` (e.g., "kostick")
 ---

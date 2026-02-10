@@ -60,7 +60,8 @@
         "Shows the \"visual\" reading of the domain (e.g., kosti.ck reads as \"kostick\")"
       ],
       "priority": 4,
-      "passes": false
+      "passes": true,
+      "inProgress": false
     },
     {
       "id": "US-005",
