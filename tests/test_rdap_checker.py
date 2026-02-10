@@ -1,13 +1,11 @@
 """Tests for US-005: RDAP availability verification."""
 
 import asyncio
-import io
 import json
 from unittest.mock import patch, AsyncMock, MagicMock
 
 import httpx
 import pytest
-from rich.console import Console
 
 from domain_search.dns_checker import DomainResult, DomainStatus
 from domain_search.rdap_checker import (
@@ -21,6 +19,7 @@ from domain_search.rdap_checker import (
     fetch_rdap_bootstrap,
     verify_available_domains,
 )
+from .conftest import _capture_console
 
 
 # --- Bootstrap parsing ---
@@ -419,11 +418,6 @@ async def test_verify_preserves_non_available_domains():
 
 
 # --- CLI integration (--skip-rdap flag) ---
-
-def _capture_console() -> tuple[Console, io.StringIO]:
-    """Create a Console that writes to a StringIO for test capturing."""
-    buf = io.StringIO()
-    return Console(file=buf, force_terminal=True, width=120), buf
 
 
 def test_main_skip_rdap_flag():

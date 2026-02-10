@@ -1,22 +1,15 @@
 """Tests for US-003: Search term.{tld} across all TLDs."""
 
 import asyncio
-import io
 from unittest.mock import patch, MagicMock, AsyncMock
 
 import dns.asyncresolver
 import dns.resolver
 import pytest
-from rich.console import Console
 
 from domain_search.dns_checker import DomainResult, DomainStatus
 from domain_search.cli import generate_domains, sort_results, display_results
-
-
-def _capture_console() -> tuple[Console, io.StringIO]:
-    """Create a Console that writes to a StringIO for test capturing."""
-    buf = io.StringIO()
-    return Console(file=buf, force_terminal=True, width=120), buf
+from .conftest import _capture_console
 
 
 def test_generate_domains_creates_all_combinations():

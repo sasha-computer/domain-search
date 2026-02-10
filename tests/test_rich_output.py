@@ -1,18 +1,10 @@
 """Tests for US-006: Rich Terminal Output."""
 
-import io
 from unittest.mock import patch
-
-from rich.console import Console
 
 from domain_search.dns_checker import DomainResult, DomainStatus
 from domain_search.cli import display_results, STATUS_STYLES
-
-
-def _capture_console() -> tuple[Console, io.StringIO]:
-    """Create a Console that writes to a StringIO for test capturing."""
-    buf = io.StringIO()
-    return Console(file=buf, force_terminal=True, width=120), buf
+from .conftest import _capture_console
 
 
 def test_display_uses_rich_table():

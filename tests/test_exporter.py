@@ -1,21 +1,14 @@
 """Tests for US-007: Export Results to JSON and CSV."""
 
 import csv
-import io
 import json
 from unittest.mock import patch, MagicMock
 
 import pytest
-from rich.console import Console
 
 from domain_search.dns_checker import DomainResult, DomainStatus
 from domain_search.exporter import export_results
-
-
-def _capture_console() -> tuple[Console, io.StringIO]:
-    """Create a Console that writes to a StringIO for test capturing."""
-    buf = io.StringIO()
-    return Console(file=buf, force_terminal=True, width=120), buf
+from .conftest import _capture_console
 
 
 @pytest.fixture

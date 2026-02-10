@@ -1,10 +1,8 @@
 """Tests for US-004: Domain Hack Generator."""
 
-import io
 from unittest.mock import patch, AsyncMock, MagicMock
 
 import pytest
-from rich.console import Console
 
 from domain_search.hack_generator import (
     DomainHack,
@@ -14,12 +12,7 @@ from domain_search.hack_generator import (
 )
 from domain_search.dns_checker import DomainResult, DomainStatus
 from domain_search.cli import main, display_results
-
-
-def _capture_console() -> tuple[Console, io.StringIO]:
-    """Create a Console that writes to a StringIO for test capturing."""
-    buf = io.StringIO()
-    return Console(file=buf, force_terminal=True, width=120), buf
+from .conftest import _capture_console
 
 
 # --- find_suffix_hacks ---
