@@ -153,3 +153,15 @@
   - `tmp_path` pytest fixture is ideal for file export tests — auto-cleaned, isolated per test
   - Case-insensitive extension matching via `.suffix.lower()` handles `.JSON`, `.CSV` etc.
 ---
+
+## 2026-02-10 - US-008
+- Verified project setup: `uv init` already done, `pyproject.toml` has all dependencies (dnspython, httpx, rich), Python 3.12+ required
+- Created `README.md` with usage instructions covering exact search, domain hack search, combined search, CLI options, export, how it works, and running tests
+- Verified `uv run python main.py --help` works correctly
+- All 108 existing tests pass
+- Files changed: `README.md`, `.chief/prds/main/prd.json`
+- **Learnings for future iterations:**
+  - Most of US-008 acceptance criteria were already satisfied by prior stories; README was the main missing piece
+  - `uv init` creates `.python-version`, `pyproject.toml`, `.venv`, and `uv.lock` — all already present
+  - Keep README focused on usage; no need for API documentation since this is a CLI tool
+---
