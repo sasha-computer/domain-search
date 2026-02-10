@@ -11,3 +11,5 @@ wheels/
 htmlcov/
 .venv
 .chief/
+.cursor/
+.claude/
