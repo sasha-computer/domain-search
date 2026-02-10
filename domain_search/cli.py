@@ -1,4 +1,4 @@
-"""Domain Search CLI - find available domain names across all TLDs."""
+"""Domain Search CLI - find available domain names (exact + hack) across all TLDs."""
 
 import argparse
 import asyncio
@@ -10,7 +10,7 @@ from rich.text import Text
 
 from domain_search.tld_list import fetch_tld_list
 from domain_search.dns_checker import DomainStatus, DomainResult, check_domains
-from domain_search.hack_generator import generate_domain_hacks, DomainHack
+from domain_search.hack_generator import generate_domain_hacks
 from domain_search.rdap_checker import verify_available_domains
 from domain_search.exporter import export_results
 
@@ -99,12 +99,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Search for available domain names across all TLDs."
     )
-    parser.add_argument("term", nargs="?", help="Search term for exact match (e.g., myname)")
-    parser.add_argument(
-        "--hack",
-        metavar="WORD",
-        help="Find domain hacks where the TLD forms part of the word (e.g., --hack creative)",
-    )
+    parser.add_argument("term", help="Word to search for (runs both exact and domain hack search)")
     parser.add_argument(
         "--concurrency",
         type=int,
@@ -128,9 +123,6 @@ def main() -> None:
         help="Filter to specific TLDs (e.g., --tld com io or --tld ck)",
     )
     args = parser.parse_args()
-
-    if not args.term and not args.hack:
-        parser.error("at least one of 'term' or '--hack WORD' is required")
 
     tlds = fetch_tld_list()
 
@@ -161,20 +153,18 @@ def main() -> None:
     domain_meta: dict[str, dict] = {}
 
     # Exact search: term.{tld}
-    if args.term:
-        exact_domains = generate_domains(args.term, tlds)
-        for d in exact_domains:
-            if d not in domain_meta:
-                all_domains.append(d)
-                domain_meta[d] = {"type": "exact", "visual": ""}
+    exact_domains = generate_domains(args.term, tlds)
+    for d in exact_domains:
+        if d not in domain_meta:
+            all_domains.append(d)
+            domain_meta[d] = {"type": "exact", "visual": ""}
 
-    # Hack search: domain hacks from the word
-    if args.hack:
-        hacks = generate_domain_hacks(args.hack, tlds)
-        for h in hacks:
-            if h.domain not in domain_meta:
-                all_domains.append(h.domain)
-                domain_meta[h.domain] = {"type": "hack", "visual": h.visual}
+    # Hack search: domain hacks from the same word
+    hacks = generate_domain_hacks(args.term, tlds)
+    for h in hacks:
+        if h.domain not in domain_meta:
+            all_domains.append(h.domain)
+            domain_meta[h.domain] = {"type": "hack", "visual": h.visual}
 
     if not all_domains:
         console.print("No domains to check.")

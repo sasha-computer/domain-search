@@ -57,7 +57,7 @@ async def check_domains(
     """Check multiple domains concurrently with a configurable concurrency limit.
 
     Args:
-        domains: List of domain names to check (e.g. ["sasha.io", "sasha.dev"]).
+        domains: List of domain names to check (e.g. ["example.io", "example.dev"]).
         concurrency: Maximum number of concurrent DNS lookups.
         on_result: Optional callback invoked after each domain is checked.
 

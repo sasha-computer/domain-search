@@ -132,11 +132,13 @@ def test_generate_domain_hacks_no_matches():
     assert generate_domain_hacks("xyz", ["com", "net"]) == []
 
 
-# --- CLI integration (--hack flag) ---
+# --- CLI integration (single-argument runs both exact + hack) ---
 
-def test_main_hack_flag():
-    """main() should accept --hack flag and find domain hacks."""
+def test_main_runs_hack_search():
+    """main() should find domain hacks from the positional term."""
     mock_results = [
+        DomainResult("kostick.ck", DomainStatus.REGISTERED),
+        DomainResult("kostick.com", DomainStatus.REGISTERED),
         DomainResult("kosti.ck", DomainStatus.AVAILABLE),
     ]
 
@@ -156,7 +158,7 @@ def test_main_hack_flag():
         patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
         patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
         patch("domain_search.cli.console", test_console),
-        patch("sys.argv", ["main.py", "--hack", "kostick"]),
+        patch("sys.argv", ["main.py", "kostick"]),
     ):
         main()
 
@@ -166,10 +168,11 @@ def test_main_hack_flag():
     assert "hack" in output  # type column
 
 
-def test_main_combined_term_and_hack():
-    """main() should support both positional term and --hack together."""
+def test_main_runs_both_exact_and_hack():
+    """main() should run both exact and hack search for the same term."""
     mock_results = [
         DomainResult("sasha.com", DomainStatus.REGISTERED),
+        DomainResult("sasha.sh", DomainStatus.REGISTERED),
         DomainResult("sa.sh", DomainStatus.AVAILABLE),
     ]
 
@@ -189,7 +192,7 @@ def test_main_combined_term_and_hack():
         patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
         patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
         patch("domain_search.cli.console", test_console),
-        patch("sys.argv", ["main.py", "sasha", "--hack", "sasha"]),
+        patch("sys.argv", ["main.py", "sasha"]),
     ):
         main()
 
@@ -198,8 +201,8 @@ def test_main_combined_term_and_hack():
     assert "sa.sh" in output
 
 
-def test_main_requires_term_or_hack():
-    """main() should error if neither term nor --hack is provided."""
+def test_main_requires_term():
+    """main() should error if no term is provided."""
     with (
         patch("sys.argv", ["main.py"]),
         pytest.raises(SystemExit),

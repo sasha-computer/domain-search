@@ -284,10 +284,13 @@ def test_main_tld_filter_invalid_tld_warning():
 
 
 def test_main_tld_filter_with_hack():
-    """--tld flag should work with --hack."""
+    """--tld flag should filter hack results too."""
     from domain_search.cli import main
 
-    mock_results = [DomainResult("kosti.ck", DomainStatus.AVAILABLE)]
+    mock_results = [
+        DomainResult("kostick.ck", DomainStatus.REGISTERED),
+        DomainResult("kosti.ck", DomainStatus.AVAILABLE),
+    ]
 
     checked_domains = []
 
@@ -308,22 +311,24 @@ def test_main_tld_filter_with_hack():
         patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
         patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
         patch("domain_search.cli.console", test_console),
-        patch("sys.argv", ["main.py", "--hack", "kostick", "--tld", "ck"]),
+        patch("sys.argv", ["main.py", "kostick", "--tld", "ck"]),
     ):
         main()
 
-    # Should only generate hack with .ck TLD
+    # Should include exact match and hack with .ck TLD
+    assert "kostick.ck" in checked_domains
     assert "kosti.ck" in checked_domains
-    # Should not include hacks with .sh or .io
-    assert not any("sh" in d for d in checked_domains if d != "kosti.ck")
+    # Should not include domains with .sh or .io
+    assert not any(d.endswith(".sh") or d.endswith(".io") for d in checked_domains)
 
 
-def test_main_tld_filter_combined_term_and_hack():
-    """--tld flag should work with both term and --hack."""
+def test_main_tld_filter_exact_and_hack():
+    """--tld flag should filter both exact and hack results."""
     from domain_search.cli import main
 
     mock_results = [
         DomainResult("sasha.com", DomainStatus.AVAILABLE),
+        DomainResult("sasha.sh", DomainStatus.REGISTERED),
         DomainResult("sa.sh", DomainStatus.AVAILABLE),
     ]
 
@@ -346,12 +351,12 @@ def test_main_tld_filter_combined_term_and_hack():
         patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
         patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
         patch("domain_search.cli.console", test_console),
-        patch("sys.argv", ["main.py", "sasha", "--hack", "sasha", "--tld", "com", "sh"]),
+        patch("sys.argv", ["main.py", "sasha", "--tld", "com", "sh"]),
     ):
         main()
 
-    # Should include exact match with .com and hack with .sh
+    # Should include exact match with .com and .sh, plus hack with .sh
     assert "sasha.com" in checked_domains
     assert "sa.sh" in checked_domains
     # Should not include .io domains
-    assert not any(".io" in d for d in checked_domains)
+    assert not any(d.endswith(".io") for d in checked_domains)
