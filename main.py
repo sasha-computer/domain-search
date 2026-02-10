@@ -99,11 +99,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Search for available domain names across all TLDs."
     )
-    parser.add_argument("term", nargs="?", help="Search term for exact match (e.g., sasha)")
+    parser.add_argument("term", nargs="?", help="Search term for exact match (e.g., myname)")
     parser.add_argument(
         "--hack",
         metavar="WORD",
-        help="Find domain hacks where the TLD forms part of the word (e.g., --hack kostick)",
+        help="Find domain hacks where the TLD forms part of the word (e.g., --hack creative)",
     )
     parser.add_argument(
         "--concurrency",

@@ -1,6 +1,6 @@
 # Domain Search
 
-A Python CLI tool that searches for available domain names across all known TLDs. It supports two modes: **exact search** (e.g., `sasha.computer`, `sasha.dev`) and **domain hack search** (where the TLD forms part of a word, e.g., `kosti.ck`). Uses free protocols (DNS lookups and RDAP) requiring no API keys.
+A Python CLI tool that searches for available domain names across all known TLDs. It supports two modes: **exact search** (e.g., `yourname.computer`, `mysite.dev`) and **domain hack search** (where the TLD forms part of a word, e.g., `creati.ve`, `kosti.ck`). Uses free protocols (DNS lookups and RDAP) requiring no API keys.
 
 ## Requirements
 
@@ -19,10 +19,10 @@ uv sync
 
 ### Exact Search
 
-Search for `sasha.{tld}` across all known TLDs:
+Search for `<word>.{tld}` across all known TLDs:
 
 ```bash
-uv run python main.py sasha
+uv run python main.py myname
 ```
 
 ### Domain Hack Search
@@ -30,17 +30,17 @@ uv run python main.py sasha
 Find creative domain hacks where the TLD forms part of a word:
 
 ```bash
-uv run python main.py --hack kostick
+uv run python main.py --hack creative
 ```
 
-This finds domains like `kosti.ck` (reads as "kostick").
+This finds domains like `creati.ve` (reads as "creative").
 
 ### Combined Search
 
 Run both exact and hack search together:
 
 ```bash
-uv run python main.py sasha --hack kostick
+uv run python main.py myname --hack creative
 ```
 
 ### Options
@@ -50,15 +50,17 @@ uv run python main.py sasha --hack kostick
 | `--hack WORD` | Find domain hacks for the given word |
 | `--concurrency N` | Max concurrent DNS lookups (default: 50) |
 | `--skip-rdap` | Skip RDAP verification (faster but less accurate) |
-| `--output FILE` | Export results to `.json` or `.csv` file |
+| `--output FILE` | Export results to `.json`, `.jsonl`, or `.csv` file |
+| `--tld TLD [TLD ...]` | Filter to specific TLDs (e.g., `--tld com io`) |
 
 ### Export Results
 
-Export to JSON or CSV (format auto-detected from file extension):
+Export to JSON, JSONL, or CSV (format auto-detected from file extension):
 
 ```bash
-uv run python main.py sasha --output results.json
-uv run python main.py sasha --output results.csv
+uv run python main.py myname --output results.json
+uv run python main.py myname --output results.jsonl
+uv run python main.py myname --output results.csv
 ```
 
 ## How It Works
