@@ -36,3 +36,26 @@
 - Tests verify not just that files are created, but that content is valid and parseable
 
 ---
+## 2026-02-10 10:00 - US-002
+
+### What was implemented
+- Added --tld flag to filter domain searches to specific TLDs
+- Flag accepts one or more TLD values (e.g., `--tld com io` or `--tld ck`)
+- TLD filtering is case-insensitive (user can type `COM` or `com`)
+- Warns users if specified TLDs are not in the IANA list but continues with valid TLDs
+- Works with both exact searches (`myname --tld com`) and domain hacks (`--hack kostick --tld ck`)
+- Can combine term and hack searches with TLD filtering
+
+### Files changed
+- `main.py`: Added `--tld` argument to argparse and implemented TLD filtering logic with validation and warnings
+- `tests/test_search.py`: Added 6 comprehensive tests covering single/multiple TLD filtering, case-insensitivity, invalid TLD warnings, and combined usage with hacks
+- `.chief/prds/generalize/prd.json`: Marked US-002 as complete
+
+### Learnings for future iterations:
+- The TLD filtering approach: filter the TLD list early (after fetching from IANA) and pass the filtered list to existing domain generation functions - no need to modify the generation logic itself
+- Warning messages should use rich console's colored markup: `[yellow]Warning: ...[/yellow]`
+- For multi-value CLI arguments, use `nargs="+"` in argparse
+- Testing strategy for CLI features: mock `fetch_tld_list()` and `check_domains()`, capture the domains passed to `check_domains()`, and verify the filter worked correctly
+- The test suite grew from 116 to 122 tests (6 new tests for TLD filtering)
+
+---
