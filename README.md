@@ -86,6 +86,26 @@ domain-search --help
 uv run pytest tests/ -v
 ```
 
+## Code Quality
+
+Run linting, formatting, and type checking locally:
+
+```bash
+uv run ruff check .
+uv run ruff format .
+uv run ty check
+```
+
+Install and run pre-commit hooks:
+
+```bash
+uv run pre-commit install
+uv run pre-commit run --all-files
+```
+
+This project uses strict lint and type-check settings. Expect checks to require
+clear type annotations and clean imports.
+
 ## Special Contributions
 
 - [Chief](https://github.com/MiniCodeMonkey/chief/tree/main)
