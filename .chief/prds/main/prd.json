@@ -28,7 +28,8 @@
         "Respects a configurable concurrency limit to avoid flooding DNS servers (default: 50 concurrent)"
       ],
       "priority": 2,
-      "passes": false
+      "passes": true,
+      "inProgress": false
     },
     {
       "id": "US-003",

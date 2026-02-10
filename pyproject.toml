@@ -5,6 +5,7 @@ description = "CLI tool to search for available domain names across all known TL
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "dnspython>=2.7.0",
     "httpx>=0.28.1",
 ]
 
