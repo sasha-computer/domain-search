@@ -45,7 +45,7 @@ wheels = [
 [[package]]
 name = "domain-search"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "dnspython" },
     { name = "httpx" },
