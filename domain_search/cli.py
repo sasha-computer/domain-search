@@ -39,6 +39,17 @@ STATUS_STYLES = {
 }
 
 
+def _create_progress(label: str, *, output_console: Console) -> Progress:
+    """Create a standardized progress bar for long-running checks."""
+    return Progress(
+        TextColumn(f"[bold blue]{label}"),
+        BarColumn(),
+        MofNCompleteColumn(),
+        TimeRemainingColumn(),
+        console=output_console,
+    )
+
+
 def display_results(
     results: list[DomainResult],
     domain_meta: dict[str, dict] | None = None,
@@ -174,13 +185,7 @@ def main() -> None:
     console.print(f"Loaded {len(tlds):,} TLDs")
 
     # DNS checking with rich progress bar
-    with Progress(
-        TextColumn("[bold blue]Checking domains"),
-        BarColumn(),
-        MofNCompleteColumn(),
-        TimeRemainingColumn(),
-        console=console,
-    ) as progress:
+    with _create_progress("Checking domains", output_console=console) as progress:
         task = progress.add_task("dns", total=total)
 
         def on_result(result: DomainResult) -> None:
@@ -196,13 +201,7 @@ def main() -> None:
         available_count = sum(1 for r in results if r.status == DomainStatus.AVAILABLE)
         if available_count > 0:
             rdap_checked = {r.domain for r in results if r.status == DomainStatus.AVAILABLE}
-            with Progress(
-                TextColumn("[bold blue]Verifying via RDAP"),
-                BarColumn(),
-                MofNCompleteColumn(),
-                TimeRemainingColumn(),
-                console=console,
-            ) as progress:
+            with _create_progress("Verifying via RDAP", output_console=console) as progress:
                 rdap_task = progress.add_task("rdap", total=available_count)
 
                 def on_rdap_result(rdap_result) -> None:
