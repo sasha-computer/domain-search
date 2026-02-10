@@ -10,7 +10,7 @@ import pytest
 from rich.console import Console
 
 from domain_search.dns_checker import DomainResult, DomainStatus
-from main import generate_domains, sort_results, display_results
+from domain_search.cli import generate_domains, sort_results, display_results
 
 
 def _capture_console() -> tuple[Console, io.StringIO]:
@@ -113,7 +113,7 @@ async def test_on_result_callback_invoked():
 
 def test_main_accepts_cli_argument():
     """main() should accept a search term as CLI argument."""
-    from main import main
+    from domain_search.cli import main
 
     mock_results = [
         DomainResult("test.com", DomainStatus.REGISTERED),
@@ -132,10 +132,10 @@ def test_main_accepts_cli_argument():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["com", "xyz"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["com", "xyz"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "test"]),
     ):
         main()
@@ -149,7 +149,7 @@ def test_main_accepts_cli_argument():
 
 def test_main_tld_filter_single():
     """--tld flag should filter to a single TLD."""
-    from main import main
+    from domain_search.cli import main
 
     mock_results = [DomainResult("test.com", DomainStatus.AVAILABLE)]
 
@@ -168,10 +168,10 @@ def test_main_tld_filter_single():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["com", "net", "org"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["com", "net", "org"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "test", "--tld", "com"]),
     ):
         main()
@@ -184,7 +184,7 @@ def test_main_tld_filter_single():
 
 def test_main_tld_filter_multiple():
     """--tld flag should accept multiple TLDs."""
-    from main import main
+    from domain_search.cli import main
 
     mock_results = [
         DomainResult("test.com", DomainStatus.AVAILABLE),
@@ -206,10 +206,10 @@ def test_main_tld_filter_multiple():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["com", "net", "org", "io"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["com", "net", "org", "io"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "test", "--tld", "com", "io"]),
     ):
         main()
@@ -220,7 +220,7 @@ def test_main_tld_filter_multiple():
 
 def test_main_tld_filter_case_insensitive():
     """--tld flag should be case-insensitive."""
-    from main import main
+    from domain_search.cli import main
 
     mock_results = [DomainResult("test.com", DomainStatus.AVAILABLE)]
 
@@ -239,10 +239,10 @@ def test_main_tld_filter_case_insensitive():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["com", "net"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["com", "net"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "test", "--tld", "COM"]),
     ):
         main()
@@ -253,7 +253,7 @@ def test_main_tld_filter_case_insensitive():
 
 def test_main_tld_filter_invalid_tld_warning():
     """--tld flag should warn if TLD not in IANA list."""
-    from main import main
+    from domain_search.cli import main
 
     mock_results = [DomainResult("test.com", DomainStatus.AVAILABLE)]
 
@@ -269,10 +269,10 @@ def test_main_tld_filter_invalid_tld_warning():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["com", "net"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["com", "net"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "test", "--tld", "com", "invalid"]),
     ):
         main()
@@ -285,7 +285,7 @@ def test_main_tld_filter_invalid_tld_warning():
 
 def test_main_tld_filter_with_hack():
     """--tld flag should work with --hack."""
-    from main import main
+    from domain_search.cli import main
 
     mock_results = [DomainResult("kosti.ck", DomainStatus.AVAILABLE)]
 
@@ -304,10 +304,10 @@ def test_main_tld_filter_with_hack():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["ck", "sh", "io"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["ck", "sh", "io"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "--hack", "kostick", "--tld", "ck"]),
     ):
         main()
@@ -320,7 +320,7 @@ def test_main_tld_filter_with_hack():
 
 def test_main_tld_filter_combined_term_and_hack():
     """--tld flag should work with both term and --hack."""
-    from main import main
+    from domain_search.cli import main
 
     mock_results = [
         DomainResult("sasha.com", DomainStatus.AVAILABLE),
@@ -342,10 +342,10 @@ def test_main_tld_filter_combined_term_and_hack():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["com", "sh", "io"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["com", "sh", "io"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "sasha", "--hack", "sasha", "--tld", "com", "sh"]),
     ):
         main()

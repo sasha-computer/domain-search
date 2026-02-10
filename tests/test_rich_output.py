@@ -6,7 +6,7 @@ from unittest.mock import patch
 from rich.console import Console
 
 from domain_search.dns_checker import DomainResult, DomainStatus
-from main import display_results, STATUS_STYLES
+from domain_search.cli import display_results, STATUS_STYLES
 
 
 def _capture_console() -> tuple[Console, io.StringIO]:
@@ -146,7 +146,7 @@ def test_display_empty_results():
 
 def test_main_uses_rich_progress_bar():
     """main() should use rich Progress for DNS scanning."""
-    from main import main
+    from domain_search.cli import main
 
     mock_results = [
         DomainResult("test.com", DomainStatus.REGISTERED),
@@ -164,10 +164,10 @@ def test_main_uses_rich_progress_bar():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["com"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["com"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "test"]),
     ):
         main()

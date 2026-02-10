@@ -428,7 +428,7 @@ def _capture_console() -> tuple[Console, io.StringIO]:
 
 def test_main_skip_rdap_flag():
     """main() should skip RDAP when --skip-rdap is provided."""
-    from main import main
+    from domain_search.cli import main
 
     mock_results = [
         DomainResult("test.com", DomainStatus.AVAILABLE),
@@ -443,10 +443,10 @@ def test_main_skip_rdap_flag():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["com"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains") as mock_verify,
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["com"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains") as mock_verify,
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "test", "--skip-rdap"]),
     ):
         main()
@@ -458,7 +458,7 @@ def test_main_skip_rdap_flag():
 
 def test_main_rdap_enabled_by_default():
     """main() should run RDAP verification by default."""
-    from main import main
+    from domain_search.cli import main
 
     mock_results = [
         DomainResult("test.com", DomainStatus.AVAILABLE),
@@ -477,10 +477,10 @@ def test_main_rdap_enabled_by_default():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["com"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["com"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "test"]),
     ):
         main()

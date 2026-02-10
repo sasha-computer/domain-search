@@ -10,6 +10,9 @@ dependencies = [
     "rich>=13.0.0",
 ]
 
+[project.scripts]
+domain-search = "domain_search.cli:main"
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",

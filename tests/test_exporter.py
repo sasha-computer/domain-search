@@ -254,7 +254,7 @@ class TestFormatDetection:
 class TestCLIIntegration:
     def test_main_with_output_json(self, tmp_path):
         """main() with --output flag exports results to JSON."""
-        from main import main
+        from domain_search.cli import main
 
         out = tmp_path / "results.json"
         mock_results = [
@@ -274,10 +274,10 @@ class TestCLIIntegration:
         test_console, buf = _capture_console()
 
         with (
-            patch("main.fetch_tld_list", return_value=["com", "xyz"]),
-            patch("main.check_domains", side_effect=mock_check_domains),
-            patch("main.verify_available_domains", side_effect=mock_verify),
-            patch("main.console", test_console),
+            patch("domain_search.cli.fetch_tld_list", return_value=["com", "xyz"]),
+            patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+            patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+            patch("domain_search.cli.console", test_console),
             patch("sys.argv", ["main.py", "test", "--output", str(out)]),
         ):
             main()
@@ -293,7 +293,7 @@ class TestCLIIntegration:
 
     def test_main_with_output_csv(self, tmp_path):
         """main() with --output flag exports results to CSV."""
-        from main import main
+        from domain_search.cli import main
 
         out = tmp_path / "results.csv"
         mock_results = [
@@ -313,10 +313,10 @@ class TestCLIIntegration:
         test_console, buf = _capture_console()
 
         with (
-            patch("main.fetch_tld_list", return_value=["com", "xyz"]),
-            patch("main.check_domains", side_effect=mock_check_domains),
-            patch("main.verify_available_domains", side_effect=mock_verify),
-            patch("main.console", test_console),
+            patch("domain_search.cli.fetch_tld_list", return_value=["com", "xyz"]),
+            patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+            patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+            patch("domain_search.cli.console", test_console),
             patch("sys.argv", ["main.py", "test", "--output", str(out)]),
         ):
             main()
@@ -328,7 +328,7 @@ class TestCLIIntegration:
 
     def test_main_without_output_flag_no_export(self, tmp_path):
         """main() without --output flag should not create any export file."""
-        from main import main
+        from domain_search.cli import main
 
         mock_results = [
             DomainResult("test.com", DomainStatus.REGISTERED),
@@ -346,10 +346,10 @@ class TestCLIIntegration:
         test_console, buf = _capture_console()
 
         with (
-            patch("main.fetch_tld_list", return_value=["com"]),
-            patch("main.check_domains", side_effect=mock_check_domains),
-            patch("main.verify_available_domains", side_effect=mock_verify),
-            patch("main.console", test_console),
+            patch("domain_search.cli.fetch_tld_list", return_value=["com"]),
+            patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+            patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+            patch("domain_search.cli.console", test_console),
             patch("sys.argv", ["main.py", "test"]),
         ):
             main()

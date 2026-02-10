@@ -13,7 +13,7 @@ from domain_search.hack_generator import (
     generate_domain_hacks,
 )
 from domain_search.dns_checker import DomainResult, DomainStatus
-from main import main, display_results
+from domain_search.cli import main, display_results
 
 
 def _capture_console() -> tuple[Console, io.StringIO]:
@@ -152,10 +152,10 @@ def test_main_hack_flag():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["ck", "com"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["ck", "com"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "--hack", "kostick"]),
     ):
         main()
@@ -185,10 +185,10 @@ def test_main_combined_term_and_hack():
     test_console, buf = _capture_console()
 
     with (
-        patch("main.fetch_tld_list", return_value=["com", "sh"]),
-        patch("main.check_domains", side_effect=mock_check_domains),
-        patch("main.verify_available_domains", side_effect=mock_verify),
-        patch("main.console", test_console),
+        patch("domain_search.cli.fetch_tld_list", return_value=["com", "sh"]),
+        patch("domain_search.cli.check_domains", side_effect=mock_check_domains),
+        patch("domain_search.cli.verify_available_domains", side_effect=mock_verify),
+        patch("domain_search.cli.console", test_console),
         patch("sys.argv", ["main.py", "sasha", "--hack", "sasha"]),
     ):
         main()
