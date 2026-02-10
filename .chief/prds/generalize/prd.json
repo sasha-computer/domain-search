@@ -29,7 +29,8 @@
         "Can be combined: domain-search sasha --hack aldrick --tld ck sh"
       ],
       "priority": 2,
-      "passes": false
+      "passes": false,
+      "inProgress": true
     },
     {
       "id": "US-003",

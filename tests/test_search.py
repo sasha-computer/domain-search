@@ -145,3 +145,213 @@ def test_main_accepts_cli_argument():
     assert "test.xyz" in output
     assert "Available: 1" in output
     assert "Registered: 1" in output
+
+
+def test_main_tld_filter_single():
+    """--tld flag should filter to a single TLD."""
+    from main import main
+
+    mock_results = [DomainResult("test.com", DomainStatus.AVAILABLE)]
+
+    checked_domains = []
+
+    async def mock_check_domains(domains, concurrency=50, on_result=None):
+        checked_domains.extend(domains)
+        for r in mock_results:
+            if on_result:
+                on_result(r)
+        return mock_results
+
+    async def mock_verify(dns_results, rate_limit=10, on_result=None):
+        return dns_results
+
+    test_console, buf = _capture_console()
+
+    with (
+        patch("main.fetch_tld_list", return_value=["com", "net", "org"]),
+        patch("main.check_domains", side_effect=mock_check_domains),
+        patch("main.verify_available_domains", side_effect=mock_verify),
+        patch("main.console", test_console),
+        patch("sys.argv", ["main.py", "test", "--tld", "com"]),
+    ):
+        main()
+
+    # Should only check test.com, not test.net or test.org
+    assert checked_domains == ["test.com"]
+    output = buf.getvalue()
+    assert "test.com" in output
+
+
+def test_main_tld_filter_multiple():
+    """--tld flag should accept multiple TLDs."""
+    from main import main
+
+    mock_results = [
+        DomainResult("test.com", DomainStatus.AVAILABLE),
+        DomainResult("test.io", DomainStatus.REGISTERED),
+    ]
+
+    checked_domains = []
+
+    async def mock_check_domains(domains, concurrency=50, on_result=None):
+        checked_domains.extend(domains)
+        for r in mock_results:
+            if on_result:
+                on_result(r)
+        return mock_results
+
+    async def mock_verify(dns_results, rate_limit=10, on_result=None):
+        return dns_results
+
+    test_console, buf = _capture_console()
+
+    with (
+        patch("main.fetch_tld_list", return_value=["com", "net", "org", "io"]),
+        patch("main.check_domains", side_effect=mock_check_domains),
+        patch("main.verify_available_domains", side_effect=mock_verify),
+        patch("main.console", test_console),
+        patch("sys.argv", ["main.py", "test", "--tld", "com", "io"]),
+    ):
+        main()
+
+    # Should only check test.com and test.io
+    assert sorted(checked_domains) == ["test.com", "test.io"]
+
+
+def test_main_tld_filter_case_insensitive():
+    """--tld flag should be case-insensitive."""
+    from main import main
+
+    mock_results = [DomainResult("test.com", DomainStatus.AVAILABLE)]
+
+    checked_domains = []
+
+    async def mock_check_domains(domains, concurrency=50, on_result=None):
+        checked_domains.extend(domains)
+        for r in mock_results:
+            if on_result:
+                on_result(r)
+        return mock_results
+
+    async def mock_verify(dns_results, rate_limit=10, on_result=None):
+        return dns_results
+
+    test_console, buf = _capture_console()
+
+    with (
+        patch("main.fetch_tld_list", return_value=["com", "net"]),
+        patch("main.check_domains", side_effect=mock_check_domains),
+        patch("main.verify_available_domains", side_effect=mock_verify),
+        patch("main.console", test_console),
+        patch("sys.argv", ["main.py", "test", "--tld", "COM"]),
+    ):
+        main()
+
+    # Should normalize to lowercase and check test.com
+    assert checked_domains == ["test.com"]
+
+
+def test_main_tld_filter_invalid_tld_warning():
+    """--tld flag should warn if TLD not in IANA list."""
+    from main import main
+
+    mock_results = [DomainResult("test.com", DomainStatus.AVAILABLE)]
+
+    async def mock_check_domains(domains, concurrency=50, on_result=None):
+        for r in mock_results:
+            if on_result:
+                on_result(r)
+        return mock_results
+
+    async def mock_verify(dns_results, rate_limit=10, on_result=None):
+        return dns_results
+
+    test_console, buf = _capture_console()
+
+    with (
+        patch("main.fetch_tld_list", return_value=["com", "net"]),
+        patch("main.check_domains", side_effect=mock_check_domains),
+        patch("main.verify_available_domains", side_effect=mock_verify),
+        patch("main.console", test_console),
+        patch("sys.argv", ["main.py", "test", "--tld", "com", "invalid"]),
+    ):
+        main()
+
+    output = buf.getvalue()
+    assert "Warning" in output
+    assert "invalid" in output
+    assert "not in the IANA list" in output
+
+
+def test_main_tld_filter_with_hack():
+    """--tld flag should work with --hack."""
+    from main import main
+
+    mock_results = [DomainResult("kosti.ck", DomainStatus.AVAILABLE)]
+
+    checked_domains = []
+
+    async def mock_check_domains(domains, concurrency=50, on_result=None):
+        checked_domains.extend(domains)
+        for r in mock_results:
+            if on_result:
+                on_result(r)
+        return mock_results
+
+    async def mock_verify(dns_results, rate_limit=10, on_result=None):
+        return dns_results
+
+    test_console, buf = _capture_console()
+
+    with (
+        patch("main.fetch_tld_list", return_value=["ck", "sh", "io"]),
+        patch("main.check_domains", side_effect=mock_check_domains),
+        patch("main.verify_available_domains", side_effect=mock_verify),
+        patch("main.console", test_console),
+        patch("sys.argv", ["main.py", "--hack", "kostick", "--tld", "ck"]),
+    ):
+        main()
+
+    # Should only generate hack with .ck TLD
+    assert "kosti.ck" in checked_domains
+    # Should not include hacks with .sh or .io
+    assert not any("sh" in d for d in checked_domains if d != "kosti.ck")
+
+
+def test_main_tld_filter_combined_term_and_hack():
+    """--tld flag should work with both term and --hack."""
+    from main import main
+
+    mock_results = [
+        DomainResult("sasha.com", DomainStatus.AVAILABLE),
+        DomainResult("sa.sh", DomainStatus.AVAILABLE),
+    ]
+
+    checked_domains = []
+
+    async def mock_check_domains(domains, concurrency=50, on_result=None):
+        checked_domains.extend(domains)
+        for r in mock_results:
+            if on_result:
+                on_result(r)
+        return mock_results
+
+    async def mock_verify(dns_results, rate_limit=10, on_result=None):
+        return dns_results
+
+    test_console, buf = _capture_console()
+
+    with (
+        patch("main.fetch_tld_list", return_value=["com", "sh", "io"]),
+        patch("main.check_domains", side_effect=mock_check_domains),
+        patch("main.verify_available_domains", side_effect=mock_verify),
+        patch("main.console", test_console),
+        patch("sys.argv", ["main.py", "sasha", "--hack", "sasha", "--tld", "com", "sh"]),
+    ):
+        main()
+
+    # Should include exact match with .com and hack with .sh
+    assert "sasha.com" in checked_domains
+    assert "sa.sh" in checked_domains
+    # Should not include .io domains
+    assert not any(".io" in d for d in checked_domains)

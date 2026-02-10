@@ -121,12 +121,40 @@ def main() -> None:
         metavar="FILE",
         help="Export results to a file (supports .json, .jsonl, and .csv)",
     )
+    parser.add_argument(
+        "--tld",
+        nargs="+",
+        metavar="TLD",
+        help="Filter to specific TLDs (e.g., --tld com io or --tld ck)",
+    )
     args = parser.parse_args()
 
     if not args.term and not args.hack:
         parser.error("at least one of 'term' or '--hack WORD' is required")
 
     tlds = fetch_tld_list()
+
+    # Filter TLDs if --tld flag is provided
+    if args.tld:
+        # Normalize user input to lowercase for comparison
+        requested_tlds = [t.lower() for t in args.tld]
+        tld_set = set(tlds)
+
+        # Check for invalid TLDs and warn
+        invalid_tlds = [t for t in requested_tlds if t not in tld_set]
+        if invalid_tlds:
+            console.print(
+                f"[yellow]Warning: The following TLDs are not in the IANA list and will be skipped: {', '.join(invalid_tlds)}[/yellow]"
+            )
+
+        # Filter to only valid TLDs from the request
+        valid_tlds = [t for t in requested_tlds if t in tld_set]
+
+        if not valid_tlds:
+            console.print("[red]Error: No valid TLDs specified.[/red]")
+            return
+
+        tlds = valid_tlds
 
     # Build the list of domains to check and metadata for display
     all_domains: list[str] = []
