@@ -1,5 +1,8 @@
 # Domain Search
 
+[![CI](https://github.com/sasha-computer/domain-search/actions/workflows/ci.yml/badge.svg)](https://github.com/sasha-computer/domain-search/actions/workflows/ci.yml)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
+
 ![domain-search CLI demo](assets/domain-search-demo.gif)
 
 - Search for available domains across basically every TLD. 
@@ -24,6 +27,20 @@ Or install once:
 
 ```bash
 uv tool install domain-search
+domain-search creative
+```
+
+Install with `pipx`:
+
+```bash
+pipx install domain-search
+domain-search creative
+```
+
+Install with `pip`:
+
+```bash
+pip install domain-search
 domain-search creative
 ```
 
