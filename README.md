@@ -9,22 +9,39 @@ A Python CLI tool that searches for available domain names across all known TLDs
 
 ## Installation
 
+### Option 1: Run without installing (recommended for quick use)
+
+```bash
+uvx domain-search <word>
+```
+
+### Option 2: Install globally with uv tool
+
+```bash
+uv tool install domain-search
+domain-search <word>
+```
+
+### From source (development)
+
 ```bash
 git clone <repo-url>
 cd domain-search
 uv sync
-```
-
-## Usage
-
-```bash
 uv run domain-search <word>
 ```
+
+The CLI is exposed via `project.scripts` (`domain_search.cli:main`).  
+Use the `domain-search` command; direct `python main.py` invocation is not supported.
+
+## Usage
 
 This searches for `<word>.{tld}` across all known TLDs (exact matches) and also finds domain hacks where the TLD forms part of the word. For example:
 
 ```bash
-uv run domain-search creative
+uvx domain-search creative
+# or, if installed globally:
+domain-search creative
 ```
 
 Returns exact matches like `creative.com`, `creative.dev` as well as hacks like `creati.ve` (reads as "creative").
@@ -43,9 +60,17 @@ Returns exact matches like `creative.com`, `creative.dev` as well as hacks like 
 Export to JSON, JSONL, or CSV (format auto-detected from file extension):
 
 ```bash
-uv run domain-search creative --output results.json
-uv run domain-search creative --output results.jsonl
-uv run domain-search creative --output results.csv
+uvx domain-search creative --output results.json
+uvx domain-search creative --output results.jsonl
+uvx domain-search creative --output results.csv
+```
+
+### Show Help
+
+```bash
+uvx domain-search --help
+# or, if installed globally:
+domain-search --help
 ```
 
 ## How It Works
@@ -63,22 +88,4 @@ uv run pytest tests/ -v
 
 ## Special Contributions
 
-This project benefits from ideas and workflows inspired by Chief:
-
-https://github.com/MiniCodeMonkey/chief/tree/main
-
-If you are exploring that ecosystem, try this easter egg:
-
-```bash
-chief wiggum
-```
-
-Tiny Ralph cameo:
-
-```text
-  _.-._
- (o.o )
-  |=|   "I choo-choo-choose domains!"
- __|__
-/_____\
-```
+- [Chief](https://github.com/MiniCodeMonkey/chief/tree/main)
