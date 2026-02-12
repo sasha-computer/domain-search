@@ -1,25 +1,45 @@
-# Domain Search
+<p align="center">
+  <img src="assets/hero.png" alt="domain-search" width="200" />
+</p>
 
-[![CI](https://github.com/sasha-computer/domain-search/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/sasha-computer/domain-search/actions/workflows/ci.yml)
-[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
+<h1 align="center">domain-search</h1>
 
-![domain-search CLI demo](assets/domain-search-demo.gif)
+<p align="center">
+  Search for available domains across every TLD, right in the terminal.
+</p>
 
-- Search for available domains across basically every TLD. 
-- No API keys, no paid service required. 
-- This tool uses DNS + RDAP checks in a fast CLI.
+<p align="center">
+  <a href="#why-domain-search">Why?</a> ·
+  <a href="#how-does-it-work">How it works</a> ·
+  <a href="#installation">Installation</a> ·
+  <a href="#usage">Usage</a>
+</p>
 
-## Quick Start
+## Why domain-search?
 
-Requirements:
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/)
+You have a name for your project. You open a registrar, type it in, and get one result for `.com`. Taken. So you try another registrar that shows more TLDs — maybe five, maybe ten. Still nothing great. You never find out that `creati.ve` was sitting there available the whole time.
+
+**domain-search fixes this.** It checks your term against the entire IANA TLD list, finds domain hacks where the TLD completes your word, and tells you what's actually available — all from the terminal, no API keys, no paid service.
+
+## How does it work?
+
+<p align="center">
+  <img src="assets/domain-search-demo.gif" alt="domain-search demo" width="800" />
+</p>
+
+- Checks every TLD in the IANA root zone — not just the popular ones
+- Finds domain hacks automatically (`creati.ve`, `nota.ble`, etc.)
+- Runs async DNS + RDAP checks in parallel for speed
+- No API keys or paid services required
+- Exports to JSON, JSONL, or CSV
+
+## Installation
+
+Requirements: Python 3.12+ and [uv](https://docs.astral.sh/uv/).
 
 First run instantly (no install):
 
 ```bash
-git clone https://github.com/sasha-computer/domain-search
-cd domain-search
 uvx domain-search creative
 ```
 
@@ -27,10 +47,9 @@ Or install once:
 
 ```bash
 uv tool install domain-search
-domain-search creative
 ```
 
-## Useful Commands
+## Usage
 
 Basic search:
 
@@ -54,35 +73,18 @@ Export results:
 
 ```bash
 domain-search creative --output results.json
-domain-search creative --output results.jsonl
 domain-search creative --output results.csv
 ```
 
-Help:
-
-```bash
-domain-search --help
-```
-
-## How It Searches
+## How it searches
 
 For a term like `creative`, the CLI does two passes:
 
-1. **Exact candidates**: `creative.com`, `creative.dev`, etc.
-2. **Domain hacks**: `creati.ve` style splits where the TLD completes the word.
+1. **Exact candidates** — `creative.com`, `creative.dev`, etc.
+2. **Domain hacks** — `creati.ve` style splits where the TLD completes the word.
 
-Then it checks candidates in stages:
+Then it checks candidates in stages: loads the full IANA TLD list (cached locally), runs async DNS checks to quickly classify candidates, verifies possibly-available domains with RDAP (unless `--skip-rdap`), and prints a table sorted with available domains first.
 
-1. Loads the full IANA TLD list (cached locally).
-2. Runs async DNS checks to quickly classify candidates.
-3. Verifies possibly-available domains with RDAP (unless `--skip-rdap`).
-4. Prints a table sorted with available domains first.
+## License
 
-## From Source
-
-```bash
-git clone <repo-url>
-cd domain-search
-uv sync
-uv run domain-search creative
-```
+MIT
