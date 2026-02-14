@@ -121,7 +121,7 @@ This repo uses strict lint/type settings. Keep annotations explicit and imports 
 - **Homebrew (macOS):** `brew install sasha-computer/tap/domain-search` -- formula in [homebrew-tap](https://github.com/sasha-computer/homebrew-tap)
 - **Linux:** `curl -fsSL https://raw.githubusercontent.com/sasha-computer/domain-search/main/install.sh | bash`
 - **uv (any platform):** `uv tool install git+https://github.com/sasha-computer/domain-search`
-- **Frontend:** Svelte 5 SPA in `frontend/`, deployed to `https://domain-search.playground.sasha.computer` via Railway
+- **Frontend:** Svelte 5 SPA in `frontend/`, deployed to `https://domain-search.sasha.computer` via Railway
 
 When bumping the version, update:
 1. `pyproject.toml` version
