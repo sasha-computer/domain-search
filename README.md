@@ -35,18 +35,22 @@ You have a name for your project. You open a registrar, type it in, and get one 
 
 ## Installation
 
-Requirements: Python 3.12+ and [uv](https://docs.astral.sh/uv/).
+**macOS (Homebrew):**
 
-First run instantly (no install):
+```bash
+brew install sasha-computer/tap/domain-search
+```
+
+**Linux:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sasha-computer/domain-search/main/install.sh | bash
+```
+
+**Try without installing** (requires [uv](https://docs.astral.sh/uv/)):
 
 ```bash
 uvx domain-search creative
-```
-
-Or install once:
-
-```bash
-uv tool install domain-search
 ```
 
 ## Usage

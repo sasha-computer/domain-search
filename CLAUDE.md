@@ -116,6 +116,18 @@ This repo uses strict lint/type settings. Keep annotations explicit and imports 
 - `AGENTS.md` and `CLAUDE.md` must remain identical.
 - When updating one, copy the same content to the other in the same change.
 
+## Installation & Distribution
+
+- **Homebrew (macOS):** `brew install sasha-computer/tap/domain-search` -- formula in [homebrew-tap](https://github.com/sasha-computer/homebrew-tap)
+- **Linux:** `curl -fsSL https://raw.githubusercontent.com/sasha-computer/domain-search/main/install.sh | bash`
+- **uv (any platform):** `uv tool install git+https://github.com/sasha-computer/domain-search`
+- **Frontend:** Svelte 5 SPA in `frontend/`, deployed to `https://domain-search.playground.sasha.computer` via Railway
+
+When bumping the version, update:
+1. `pyproject.toml` version
+2. Git tag (`v<version>`)
+3. `Formula/domain-search.rb` in the homebrew-tap repo (url + sha256)
+
 ## Security Disclaimer
 
 This is a small CLI utility focused on domain discovery and is not designed as a security-critical system. No dedicated security policy is maintained for this repository at this time.
